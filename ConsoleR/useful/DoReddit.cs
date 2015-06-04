@@ -2,46 +2,60 @@
 using System.Linq;
 using RedditSharp;
 using RedditSharp.Things;
+using ConsoleR.useful;
 
 namespace ConsoleR.useful
 {
-    class DoReddit
+    internal class DoReddit
     {
-        private string _sub;
-        private int page = 0;
-
-        public void GetSub(Reddit reddit, string sub, bool all = true)
+        public void Begin(Reddit reddit)
         {
-            this._sub = sub;
-            if (all)
+            var subreddit = reddit.RSlashAll;
+            int page = 0;
+            while (true)
             {
-                var subreddit = reddit.RSlashAll;
-                GetFirstPosts(subreddit);
-            }
-            else
-            {
-                _sub = _sub.Replace("r/", "");
-                var subreddit = reddit.GetSubreddit("r/" + _sub);
-                try
+                Console.Write(">");
+                string command = Console.ReadLine();
+                switch (command)
                 {
-                    GetFirstPosts(subreddit);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
+                    case "h":
+                        Help.GetHelp();
+                        continue;
+                    case "b":
+                        boss.BossMode();
+                        continue;
+                    case "":
+                        GetPosts(page++, subreddit);
+                        continue;
+                    case "r":
+                    {
+                        subreddit = GetSubreddit(reddit);
+                        continue;
+                    }
                 }
             }
         }
 
-        public void GetFirstPosts(Subreddit subreddit)
+        private Subreddit GetSubreddit(Reddit reddit)
         {
-            foreach (var post in subreddit.Hot.Take(5))
+            Console.Write("Enter a subreddit. We'll try to find it >");
+            var sub = Console.ReadLine();
+            if (sub != null)
             {
-                Console.WriteLine(post.Title + "\n");
+                sub = sub.Replace("r/", "");
+                return reddit.GetSubreddit("r/" + sub);
             }
-            page++;
-            Console.Write("Command: ");
-            string command = Console.ReadLine();
+        }
+
+        private static void GetPosts(int page, Subreddit subreddit)
+        {
+            Console.Clear();
+            int num = (page*5) + 1;
+            Console.WriteLine("");
+            foreach (var post in subreddit.Hot.Skip(page*5).Take(5))
+            {
+                Console.WriteLine("\n {0}\t" + post.Title + "\t" + post.CommentCount + " comments\n", num++);
+            }
         }
     }
 }
